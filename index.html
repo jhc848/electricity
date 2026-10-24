@@ -13,7 +13,6 @@
   }
   .app { display: flex; height: 100vh; }
 
-  /* ============ 左上角元件库（仅元件） ============ */
   .palette {
     width: 258px; flex: 0 0 258px;
     background: #fff; border-right: 1px solid #dbe3ee;
@@ -40,7 +39,6 @@
   .pal-item svg { width: 100%; height: 58px; display: block; }
   .pal-item span { font-size: 11px; color: #2c3e5a; margin-top: 2px; white-space: nowrap; }
 
-  /* ============ 操作台 ============ */
   .workspace {
     flex: 1; position: relative; overflow: hidden;
     background-color: #f7f9fd;
@@ -58,9 +56,8 @@
     pointer-events: none; backdrop-filter: blur(3px);
   }
 
-  /* ============ 右上角读数面板 ============ */
   .readout {
-    position: absolute; top: 54px; right: 14px;
+    position: absolute; top: 58px; right: 14px;
     background: rgba(255,255,255,.96);
     border: 1px solid #dbe3ee; border-radius: 14px;
     padding: 12px 15px; min-width: 226px;
@@ -74,6 +71,12 @@
     font-weight: 700; font-size: .82rem; color: #2563eb;
     margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
   }
+  .readout .ro-teacher {
+    font-size: .72rem; font-weight: 700; color: #1d4ed8;
+    background: #eff6ff; border: 1px solid #bfdbfe;
+    border-radius: 8px; padding: 5px 8px; margin-bottom: 8px;
+    text-align: center; letter-spacing: .02em;
+  }
   .readout .ro-row {
     display: flex; justify-content: space-between; gap: 16px;
     padding: 3px 0; color: #4a5c7a;
@@ -84,9 +87,6 @@
   .readout .ro-sep { height: 1px; background: #e6ecf5; margin: 7px 0; }
   .readout .ro-sub { font-size: .7rem; color: #94a3b8; text-align: center; padding-top: 4px; }
 
-  /* =========================================================
-     右下角浮动操作面板
-     ========================================================= */
   .bottom-dock {
     position: absolute;
     right: 14px; bottom: 14px;
@@ -105,9 +105,7 @@
     gap: 10px;
   }
   .bottom-dock::-webkit-scrollbar { width: 8px; }
-  .bottom-dock::-webkit-scrollbar-thumb {
-    background: #d5deeb; border-radius: 8px;
-  }
+  .bottom-dock::-webkit-scrollbar-thumb { background: #d5deeb; border-radius: 8px; }
 
   .props {
     display: flex; flex-direction: column; gap: 8px;
@@ -124,6 +122,27 @@
   .props input[type=number]:disabled {
     background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed;
   }
+  .props input[type=range] {
+    width: 100%; height: 6px;
+    -webkit-appearance: none; appearance: none;
+    background: #e2e8f0; border-radius: 3px; outline: none; cursor: pointer;
+    margin: 2px 0;
+  }
+  .props input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #3b82f6; cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  }
+  .props input[type=range]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #3b82f6; cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  }
+  .props input[type=range]:disabled { opacity: .5; cursor: not-allowed; }
+  .props .slider-row { display: flex; align-items: center; gap: 8px; padding: 0 2px; }
   .props .del-btn {
     margin-top: 2px; padding: 6px; border: 1px solid #fecaca; background: #fff5f5;
     color: #dc2626; border-radius: 9px; font-size: .76rem; cursor: pointer; font-family: inherit;
@@ -153,9 +172,163 @@
   }
   .tools button:hover { background: #eef4ff; border-color: #9bbcf7; color: #2563eb; }
 
-  /* =========================================================
-     全局提示：短路卡片
-     ========================================================= */
+  .teacher-bar {
+    position: fixed;
+    top: 12px; right: 14px;
+    display: flex; align-items: center; gap: 6px;
+    z-index: 10001;
+  }
+  .teacher-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    font-size: .8rem; font-weight: 600; color: #334155;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 4px 14px -6px rgba(30,47,74,.35);
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .teacher-btn:hover {
+    border-color: #93c5fd; color: #1d4ed8; background: #eff6ff;
+  }
+  .teacher-btn.active {
+    background: #eff6ff; border-color: #60a5fa; color: #1d4ed8;
+    box-shadow: 0 4px 16px -6px rgba(37,99,235,.45);
+  }
+  .teacher-exit {
+    display: none;
+    padding: 7px 12px;
+    background: #fff;
+    border: 1px solid #fecaca;
+    border-radius: 20px;
+    font-size: .78rem; color: #dc2626;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 4px 14px -6px rgba(30,47,74,.35);
+    transition: background .15s;
+    white-space: nowrap;
+  }
+  .teacher-exit.show { display: inline-block; }
+  .teacher-exit:hover { background: #fef2f2; }
+
+  .teacher-modal {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,.42);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 20000;
+  }
+  .teacher-modal.show { display: flex; }
+
+  .tm-card {
+    width: 340px;
+    background: #fff;
+    border-radius: 22px;
+    padding: 28px 30px 24px;
+    display: flex; flex-direction: column; align-items: center;
+    box-shadow: 0 28px 70px -20px rgba(30,47,74,.6);
+    animation: tmIn .26s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes tmIn {
+    from { opacity: 0; transform: scale(.9) translateY(10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .tm-icon { font-size: 2.2rem; margin-bottom: 4px; }
+  .tm-title { font-size: 1.05rem; font-weight: 800; color: #1e2f4a; }
+  .tm-sub { font-size: .74rem; color: #8b9ab5; margin-top: 4px; margin-bottom: 16px; text-align: center; }
+  .tm-card input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #cfd9e8;
+    border-radius: 12px;
+    font-size: .95rem;
+    font-family: inherit;
+    letter-spacing: .18em;
+    text-align: center;
+    color: #1e2f4a;
+    outline: none;
+    text-transform: uppercase;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .tm-card input:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px #dbeafe;
+  }
+  .tm-card input::placeholder {
+    letter-spacing: .12em; color: #b6c2d6; font-size: .82rem;
+  }
+  .tm-error {
+    width: 100%;
+    min-height: 20px;
+    font-size: .72rem;
+    color: #dc2626;
+    text-align: center;
+    padding-top: 6px;
+  }
+  .tm-actions {
+    width: 100%;
+    display: flex; gap: 10px;
+    margin-top: 8px;
+  }
+  .tm-actions button {
+    flex: 1;
+    padding: 9px;
+    border-radius: 11px;
+    font-size: .82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .15s;
+  }
+  .tm-cancel {
+    background: #f7f9fd; border: 1px solid #dbe3ee; color: #64748b;
+  }
+  .tm-cancel:hover { background: #eef2f8; }
+  .tm-confirm {
+    background: #2563eb; border: 1px solid #2563eb; color: #fff;
+  }
+  .tm-confirm:hover { background: #1d4ed8; border-color: #1d4ed8; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+  .tm-card input.shake { animation: shake .4s; border-color: #fca5a5; }
+
+  .welcome-card {
+    position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(.82);
+    background: linear-gradient(145deg, #ffffff, #eff6ff);
+    border: 2px solid #93c5fd;
+    border-radius: 26px;
+    padding: 30px 56px 26px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    box-shadow: 0 28px 70px -20px rgba(37,99,235,.5);
+    z-index: 15000; opacity: 0; pointer-events: none;
+    transition: opacity .28s ease, transform .28s cubic-bezier(.34,1.56,.64,1);
+  }
+  .welcome-card.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  .welcome-card .wc-icon { font-size: 2.6rem; margin-bottom: 4px; }
+  .welcome-card .wc-title {
+    font-size: .78rem; color: #64748b; letter-spacing: .12em;
+  }
+  .welcome-card .wc-name {
+    font-size: 1.45rem; font-weight: 800; color: #1d4ed8;
+    letter-spacing: .02em;
+  }
+  .welcome-card .wc-sub {
+    font-size: .72rem; color: #94a3b8; margin-top: 6px;
+    background: #dbeafe; padding: 3px 12px; border-radius: 12px;
+  }
+
   .toast-card {
     position: fixed; top: 50%; left: 50%;
     transform: translate(-50%, -50%) scale(0.85);
@@ -164,8 +337,7 @@
     border-radius: 22px;
     padding: 26px 42px 24px;
     display: flex; flex-direction: column; align-items: center; gap: 6px;
-    box-shadow: 0 24px 60px -18px rgba(220,38,38,.55),
-                0 0 0 1px rgba(220,38,38,.08);
+    box-shadow: 0 24px 60px -18px rgba(220,38,38,.55), 0 0 0 1px rgba(220,38,38,.08);
     z-index: 9999; opacity: 0; pointer-events: none;
     transition: opacity .22s ease, transform .22s cubic-bezier(.34,1.56,.64,1);
   }
@@ -174,18 +346,10 @@
     font-size: 2.6rem; line-height: 1;
     animation: pulseIcon .8s ease-in-out infinite alternate;
   }
-  @keyframes pulseIcon {
-    from { transform: scale(1); }
-    to   { transform: scale(1.16); }
-  }
-  .toast-card .tc-title {
-    font-size: 1.15rem; font-weight: 800; color: #dc2626; letter-spacing: .02em;
-  }
+  @keyframes pulseIcon { from { transform: scale(1); } to { transform: scale(1.16); } }
+  .toast-card .tc-title { font-size: 1.15rem; font-weight: 800; color: #dc2626; letter-spacing: .02em; }
   .toast-card .tc-sub { font-size: .82rem; color: #64748b; }
 
-  /* =========================================================
-     全局提示：顶部黄色呼吸条
-     ========================================================= */
   .breath-bar {
     position: fixed; top: 0; left: 0; right: 0;
     height: 42px;
@@ -215,9 +379,6 @@
     }
   }
 
-  /* =========================================================
-     全局 SVG 样式
-     ========================================================= */
   svg .w {
     stroke: #1e2f4a; stroke-width: 2.4; fill: none;
     stroke-linecap: round; stroke-linejoin: round;
@@ -234,7 +395,6 @@
     fill: #2563eb; text-anchor: middle;
   }
 
-  /* ============ 画布专属样式 ============ */
   #canvas .element { cursor: grab; }
   #canvas .element:active { cursor: grabbing; }
   #canvas .element.selected .w,
@@ -267,7 +427,6 @@
     stroke-linecap: square; stroke-linejoin: miter;
   }
 
-  /* ============ 拖拽幽灵 ============ */
   .ghost {
     position: fixed; width: 122px; height: 82px; pointer-events: none;
     transform: translate(-50%, -50%); opacity: .78; z-index: 999;
@@ -276,14 +435,38 @@
 </style>
 </head>
 <body>
-  <!-- 顶部黄色呼吸条 -->
   <div class="breath-bar" id="breathBar"></div>
 
-  <!-- 电源短路卡片 -->
+  <div class="teacher-bar">
+    <button class="teacher-btn" id="teacherBtn">👩‍🏫 教师模式</button>
+    <button class="teacher-exit" id="teacherExit">退出</button>
+  </div>
+
+  <div class="teacher-modal" id="teacherModal">
+    <div class="tm-card">
+      <div class="tm-icon">👩‍🏫</div>
+      <div class="tm-title">教师模式</div>
+      <div class="tm-sub">请输入姓名首字母（不区分大小写）</div>
+      <input type="text" id="teacherInput" placeholder="例如 SAY" maxlength="8" autocomplete="off" spellcheck="false">
+      <div class="tm-error" id="teacherError"></div>
+      <div class="tm-actions">
+        <button class="tm-cancel" id="teacherCancel">取消</button>
+        <button class="tm-confirm" id="teacherConfirm">进入</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="welcome-card" id="welcomeCard">
+    <div class="wc-icon">👩‍🏫</div>
+    <div class="wc-title">欢迎您</div>
+    <div class="wc-name">孙爱云老师</div>
+    <div class="wc-sub">教师模式已开启</div>
+  </div>
+
   <div class="toast-card" id="toastCard">
     <div class="tc-icon">⚡</div>
     <div class="tc-title">电源短路</div>
-    <div class="tc-sub">请立即检查电路连接</div>
+    <div class="tc-sub">电流极大，请立即检查电路连接</div>
   </div>
 
 <div class="app">
@@ -310,7 +493,118 @@
 
 <script>
 /* =========================================================
-   1. 元件几何定义
+   1. 教师表 & 教师模式状态
+   ========================================================= */
+const TEACHERS = {
+  'SAY': '孙爱云',
+  '848':  'JHC',
+  'LX':  '李霞',
+  'WY':  '王勇'
+};
+
+let teacherMode = false;
+let teacherName = '';
+let teacherCode = '';
+
+const teacherBtn    = document.getElementById('teacherBtn');
+const teacherExit   = document.getElementById('teacherExit');
+const teacherModal  = document.getElementById('teacherModal');
+const teacherInput  = document.getElementById('teacherInput');
+const teacherError  = document.getElementById('teacherError');
+const teacherCancel = document.getElementById('teacherCancel');
+const teacherConfirm= document.getElementById('teacherConfirm');
+const welcomeCard   = document.getElementById('welcomeCard');
+
+let welcomeTimer = null;
+
+function openTeacherModal() {
+  teacherInput.value = '';
+  teacherError.textContent = '';
+  teacherModal.classList.add('show');
+  setTimeout(() => teacherInput.focus(), 60);
+}
+
+function closeTeacherModal() {
+  teacherModal.classList.remove('show');
+}
+
+function showTeacherError(msg) {
+  teacherError.textContent = msg;
+  teacherInput.classList.add('shake');
+  setTimeout(() => teacherInput.classList.remove('shake'), 420);
+  teacherInput.focus();
+  teacherInput.select();
+}
+
+function tryEnterTeacher() {
+  const raw = teacherInput.value.trim().toUpperCase().replace(/[\s,，、.]/g, '');
+  if (!raw) { showTeacherError('请输入姓名首字母'); return; }
+  const name = TEACHERS[raw];
+  if (!name) { showTeacherError('未找到该教师，请检查首字母'); return; }
+
+  teacherMode = true;
+  teacherName = name;
+  teacherCode = raw;
+
+  closeTeacherModal();
+  updateTeacherBtn();
+  showWelcome(name);
+  refresh();
+}
+
+function exitTeacherMode() {
+  teacherMode = false;
+  teacherName = '';
+  teacherCode = '';
+  updateTeacherBtn();
+  refresh();
+}
+
+function updateTeacherBtn() {
+  if (teacherMode) {
+    teacherBtn.innerHTML = `👩‍🏫 ${teacherName}老师`;
+    teacherBtn.classList.add('active');
+    teacherExit.classList.add('show');
+  } else {
+    teacherBtn.innerHTML = `👩‍🏫 教师模式`;
+    teacherBtn.classList.remove('active');
+    teacherExit.classList.remove('show');
+  }
+}
+
+function showWelcome(name) {
+  welcomeCard.querySelector('.wc-name').textContent = name + '老师';
+  welcomeCard.classList.add('show');
+  clearTimeout(welcomeTimer);
+  welcomeTimer = setTimeout(() => hideWelcome(), 1600);
+}
+
+function hideWelcome() {
+  welcomeCard.classList.remove('show');
+  clearTimeout(welcomeTimer);
+}
+
+document.addEventListener('pointerdown', () => {
+  if (welcomeCard.classList.contains('show')) hideWelcome();
+}, true);
+
+teacherBtn.addEventListener('click', () => {
+  if (teacherMode) return;
+  openTeacherModal();
+});
+teacherExit.addEventListener('click', exitTeacherMode);
+teacherCancel.addEventListener('click', closeTeacherModal);
+teacherConfirm.addEventListener('click', tryEnterTeacher);
+teacherModal.addEventListener('click', e => {
+  if (e.target === teacherModal) closeTeacherModal();
+});
+teacherInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); tryEnterTeacher(); }
+  else if (e.key === 'Escape') closeTeacherModal();
+});
+
+/* =========================================================
+   2. 元件几何定义
    ========================================================= */
 const TERM_LR = [
   { x: -50, y: 0, dx: -1, dy: 0 },
@@ -353,6 +647,21 @@ function lampDraw(el) {
     <line class="w" x1="-50" y1="0" x2="-22" y2="0"/>
     <line class="w" x1="22" y1="0" x2="50" y2="0"/>
   `;
+}
+
+function rheoRatio(el) {
+  const max = Number(el.props.max) || 20;
+  const rawR = Number(el.props.resistance);
+  const res = isNaN(rawR) ? max / 2 : Math.max(0, Math.min(rawR, max));
+  return max > 0 ? res / max : 0.5;
+}
+
+function isRheoTermConnected(elId, termIndex) {
+  if (!elId) return false;
+  return wires.some(w =>
+    (w.a.el === elId && w.a.term === termIndex) ||
+    (w.b.el === elId && w.b.term === termIndex)
+  );
 }
 
 const SHAPES = {
@@ -410,29 +719,49 @@ const SHAPES = {
 
   rheostat: {
     name: '滑动变阻器',
-    defaults: { max: 20 },
-    terminals: TERM_LR,
-    refPos: { x: 0, y: -48 },
-    draw: () => `
-      <rect class="w" x="-25" y="-11" width="50" height="22" rx="2"/>
-      <line class="w" x1="-50" y1="0" x2="-25" y2="0"/>
-      <line class="w" x1="25" y1="0" x2="50" y2="0"/>
-      <line class="w" x1="0" y1="-34" x2="0" y2="-17"/>
-      <polygon class="filldark" points="0,-11 -5.5,-19 5.5,-19"/>
-    `,
-    label: el => `${el.props.max} Ω`
+    defaults: { max: 20, resistance: 10 },
+    terminals: [
+      { x: -50, y: 0, dx: -1, dy: 0 },
+      { x:  50, y: 0, dx:  1, dy: 0 },
+      { x:   0, y: -38, dx: 0, dy: -1 }
+    ],
+    refPos: { x: 0, y: -54 },
+    draw: (el) => {
+      const ratio = rheoRatio(el);
+      const sliderX = -20 + ratio * 40;
+
+      let showLeftPin = true;
+      let showRightPin = true;
+      if (el.id) {
+        const leftConnected  = isRheoTermConnected(el.id, 0);
+        const rightConnected = isRheoTermConnected(el.id, 1);
+        showLeftPin  = !rightConnected;
+        showRightPin = !leftConnected;
+      }
+
+      return `
+        <rect class="w" x="-25" y="-11" width="50" height="22" rx="2"/>
+        ${showLeftPin  ? `<line class="w" x1="-50" y1="0" x2="-25" y2="0"/>` : ''}
+        ${showRightPin ? `<line class="w" x1="25" y1="0" x2="50" y2="0"/>` : ''}
+        <line class="w" x1="${sliderX}" y1="-38" x2="${sliderX}" y2="-17"/>
+        <polygon class="filldark" points="${sliderX},-11 ${sliderX-5.5},-19 ${sliderX+5.5},-19"/>
+      `;
+    },
+    label: el => `${(Number(el.props.resistance) || 0).toFixed(1)} Ω`
   },
 
   bell: {
     name: '电铃',
     defaults: {},
     terminals: TERM_LR,
-    refPos: { x: 0, y: -32 },
+    refPos: { x: 0, y: -42 },
     draw: () => `
-      <path class="w" d="M -22 0 A 22 22 0 0 1 22 0"/>
-      <line class="w" x1="-22" y1="0" x2="22" y2="0"/>
-      <line class="w" x1="-50" y1="0" x2="-22" y2="0"/>
-      <line class="w" x1="22" y1="0" x2="50" y2="0"/>
+      <path class="w" d="M -20 -10 A 20 20 0 0 1 20 -10"/>
+      <line class="w" x1="-20" y1="-10" x2="20" y2="-10"/>
+      <line class="w" x1="-12" y1="-10" x2="-12" y2="0"/>
+      <line class="w" x1="12" y1="-10" x2="12" y2="0"/>
+      <line class="w" x1="-50" y1="0" x2="-12" y2="0"/>
+      <line class="w" x1="12" y1="0" x2="50" y2="0"/>
     `
   },
 
@@ -457,7 +786,7 @@ const SHAPES = {
 };
 
 /* =========================================================
-   2. 状态
+   3. 状态
    ========================================================= */
 const canvas      = document.getElementById('canvas');
 const paletteGrid = document.getElementById('paletteGrid');
@@ -482,19 +811,13 @@ const snap = v => Math.round(v / GRID) * GRID;
 const ALIGN_SNAP = 14;
 
 /* =========================================================
-   3. 安全状态
-   带电（正常通路）：
-     · 允许：添加元件、移动元件、选中查看、断开/闭合开关、删除开关、删除电源
-     · 禁止：接线、删除导线、删除用电器、调节参数、清空画布
-   短路：
-     · 允许：删除导线/元件来修复电路、断开开关、删除电源
-     · 禁止：接线、添加元件、移动元件、调节参数、清空画布
+   4. 安全状态
    ========================================================= */
-const isLiveLocked  = () => simResult.live && !simResult.shortCircuit;
-const isShortLocked = () => simResult.shortCircuit;
+const isLiveLocked  = () => !teacherMode && simResult.live && !simResult.shortCircuit;
+const isShortLocked = () => !teacherMode && simResult.shortCircuit;
 
 /* =========================================================
-   4. 提示系统
+   5. 提示系统
    ========================================================= */
 let cardTimer = null;
 function showShortCircuitCard() {
@@ -518,26 +841,63 @@ function showWarn(msg) {
   breathTimer = setTimeout(() => breathBar.classList.remove('show'), 2800);
 }
 
+let lastTeacherWarnTime = 0;
+function showTeacherWarn() {
+  const now = Date.now();
+  if (now - lastTeacherWarnTime < 1200) return;
+  lastTeacherWarnTime = now;
+
+  breathBar.innerHTML = `<span>⚠️</span><span>请注意：当前为教师模式，带电操作为危险行为，请勿模仿</span>`;
+  breathBar.classList.add('show');
+  clearTimeout(breathTimer);
+  breathTimer = setTimeout(() => breathBar.classList.remove('show'), 3000);
+}
+
 function warnLive(action) {
   if (isShortLocked()) {
     showWarn(`电源短路 · 请先删除导线或元件修复电路，再${action}`);
   } else {
-    showWarn(`带电操作 · 请先断开开关（或移除电源）再${action}`);
+    showWarn(`电路带电 · 请先断开开关（或移除电源）再${action}`);
   }
 }
 
+function teacherWarnIfLive() {
+  if (teacherMode && simResult.live) showTeacherWarn();
+}
+
 /* =========================================================
-   5. 几何 / 布线
+   6. 几何 / 布线 / 接线柱可见性
    ========================================================= */
+function getTermPos(el, termIndex) {
+  const shape = SHAPES[el.type];
+  const t = shape.terminals[termIndex];
+  if (!t) return null;
+
+  if (el.type === 'rheostat' && termIndex === 2) {
+    const ratio = rheoRatio(el);
+    return { x: -20 + ratio * 40, y: -38 };
+  }
+  return { x: t.x, y: t.y };
+}
+
 function getTerm(ref) {
   const el = elements.find(e => e.id === ref.el);
   if (!el) return null;
   const t = SHAPES[el.type].terminals[ref.term];
   if (!t) return null;
+  const pos = getTermPos(el, ref.term);
   return {
-    pos: { x: el.x + t.x, y: el.y + t.y },
+    pos: { x: el.x + pos.x, y: el.y + pos.y },
     dir: { x: t.dx, y: t.dy }
   };
+}
+
+function isTermVisible(el, termIndex) {
+  if (el.type === 'rheostat') {
+    if (termIndex === 0) return !isRheoTermConnected(el.id, 1);
+    if (termIndex === 1) return !isRheoTermConnected(el.id, 0);
+  }
+  return true;
 }
 
 function dedupe(pts) {
@@ -613,9 +973,9 @@ function routeWire(pA, dA, pB, dB) {
     }
   }
   else if (hA && !hB) {
-    pts.push({ x: b1.x, y: a1.y });
-  } else {
     pts.push({ x: a1.x, y: b1.y });
+  } else {
+    pts.push({ x: b1.x, y: a1.y });
   }
 
   pts.push(b1, { x: pB.x, y: pB.y });
@@ -631,38 +991,22 @@ function rectPath(pts) {
 }
 
 function tempPath(A, mouse) {
-  const S = 30, OUTER = 36;
+  const S = 30;
   const a1 = { x: A.pos.x + A.dir.x * S, y: A.pos.y + A.dir.y * S };
   const pts = [{ x: A.pos.x, y: A.pos.y }, a1];
   const hA = Math.abs(A.dir.x) > 0.5;
 
   if (hA) {
-    const dirX = A.dir.x;
-    const forward = (mouse.x - a1.x) * dirX >= 0;
-    const collinear = Math.abs(mouse.y - a1.y) < 2;
-    if (forward) {
-      if (!collinear) pts.push({ x: a1.x, y: mouse.y });
-    } else {
-      const outerX = a1.x + dirX * OUTER;
-      pts.push({ x: outerX, y: a1.y }, { x: outerX, y: mouse.y });
-    }
+    if (Math.abs(mouse.y - a1.y) > 2) pts.push({ x: a1.x, y: mouse.y });
   } else {
-    const dirY = A.dir.y;
-    const forward = (mouse.y - a1.y) * dirY >= 0;
-    const collinear = Math.abs(mouse.x - a1.x) < 2;
-    if (forward) {
-      if (!collinear) pts.push({ x: mouse.x, y: a1.y });
-    } else {
-      const outerY = a1.y + dirY * OUTER;
-      pts.push({ x: a1.x, y: outerY }, { x: mouse.x, y: outerY });
-    }
+    if (Math.abs(mouse.x - a1.x) > 2) pts.push({ x: mouse.x, y: a1.y });
   }
   pts.push({ x: mouse.x, y: mouse.y });
   return rectPath(dedupe(pts));
 }
 
 /* =========================================================
-   6. 线性方程组求解
+   7. 线性方程组求解
    ========================================================= */
 function solveLinear(A, z) {
   const n = z.length;
@@ -698,7 +1042,7 @@ function solveLinear(A, z) {
 }
 
 /* =========================================================
-   7. 电路仿真（节点法 MNA）
+   8. 电路仿真
    ========================================================= */
 const LAMP_R      = 10;
 const BELL_R      = 10;
@@ -769,11 +1113,22 @@ function simulate() {
       case 'motor':
         resistors.push({ a: na, b: nb, R: MOTOR_R, el }); break;
       case 'resistor':
-        resistors.push({ a: na, b: nb, R: Math.max(el.props.resistance, 0.001), el }); break;
-      case 'rheostat':
-        resistors.push({ a: na, b: nb, R: Math.max(el.props.max, 0.001), el }); break;
+        resistors.push({ a: na, b: nb, R: Math.max(Number(el.props.resistance) || 0, 0.001), el }); break;
+      case 'rheostat': {
+        const n0 = nodeIdx(tk(el.id, 0));
+        const n1 = nodeIdx(tk(el.id, 1));
+        const n2 = nodeIdx(tk(el.id, 2));
+        const max = Math.max(Number(el.props.max) || 20, 0.001);
+        const rawR = Number(el.props.resistance);
+        const rValue = isNaN(rawR) ? max / 2 : Math.max(0, Math.min(rawR, max));
+        const r1 = Math.max(rValue, 0.001);
+        const r2 = Math.max(max - rValue, 0.001);
+        resistors.push({ a: n0, b: n2, R: r1, el: null });
+        resistors.push({ a: n2, b: n1, R: r2, el: null });
+        break;
+      }
       case 'resistanceBox':
-        resistors.push({ a: na, b: nb, R: Math.max(el.props.resistance, 0.001), el }); break;
+        resistors.push({ a: na, b: nb, R: Math.max(Number(el.props.resistance) || 0, 0.001), el }); break;
     }
   }
 
@@ -833,13 +1188,15 @@ function simulate() {
   for (const r of resistors) {
     const u = V[r.a] - V[r.b];
     const i = u / r.R;
+    if (Math.abs(i) > 1e-3) live = true;
+
+    if (!r.el) continue;
     const info = { voltage: Math.abs(u), current: i, lit: false };
     if (r.el.type === 'lamp' && Math.abs(i) > LIT_CURRENT) {
       info.lit = true;
       r.el._lit = true;
     }
     res.elements[r.el.id] = info;
-    if (Math.abs(i) > 1e-3) live = true;
   }
 
   let overload = false;
@@ -863,7 +1220,33 @@ function simulate() {
   res.status = sourceCurrent > 1e-3 ? '通路' : '断路';
   res.live = live || sourceCurrent > 1e-3;
 
-  if (overload) {
+  /* ---------- 无有效负载判定短路 ---------- */
+  /* 有效负载：灯泡、电铃、电动机、阻值>0的定值电阻/电阻箱/滑动变阻器 */
+  let hasEffectiveLoad = false;
+  for (const r of resistors) {
+    if (!r.el) continue;
+    const t = r.el.type;
+    if (t === 'lamp' || t === 'bell' || t === 'motor') { hasEffectiveLoad = true; break; }
+    if (t === 'resistor' && Number(r.el.props.resistance) > 0) { hasEffectiveLoad = true; break; }
+    if (t === 'resistanceBox' && Number(r.el.props.resistance) > 0) { hasEffectiveLoad = true; break; }
+  }
+  if (!hasEffectiveLoad) {
+    /* 滑动变阻器：只要有一处接入电路且阻值>0，视为有效负载 */
+    for (const el of elements) {
+      if (el.type !== 'rheostat') continue;
+      const rawR = Number(el.props.resistance);
+      if (isNaN(rawR) || rawR <= 0) continue;
+      const connected = [0, 1, 2].some(i =>
+        wires.some(w =>
+          (w.a.el === el.id && w.a.term === i) ||
+          (w.b.el === el.id && w.b.term === i)
+        )
+      );
+      if (connected) { hasEffectiveLoad = true; break; }
+    }
+  }
+
+  if ((overload || !hasEffectiveLoad) && sourceCurrent > 1e-3) {
     res.shortCircuit = true;
     res.live = true;
     res.status = '短路';
@@ -873,7 +1256,7 @@ function simulate() {
 }
 
 /* =========================================================
-   8. 渲染
+   9. 渲染
    ========================================================= */
 function refdesSVG(el) {
   if (!el.refdes) return '';
@@ -922,8 +1305,11 @@ function render() {
     out += refdesSVG(el);
 
     s.terminals.forEach((t, i) => {
-      out += `<circle class="hit" cx="${t.x}" cy="${t.y}" r="13" data-el="${el.id}" data-term="${i}"/>`;
-      out += `<circle class="dot-t" cx="${t.x}" cy="${t.y}" r="4"/>`;
+      if (!isTermVisible(el, i)) return;
+      const tp = getTermPos(el, i);
+      if (!tp) return;
+      out += `<circle class="hit" cx="${tp.x}" cy="${tp.y}" r="13" data-el="${el.id}" data-term="${i}"/>`;
+      out += `<circle class="dot-t" cx="${tp.x}" cy="${tp.y}" r="4"/>`;
     });
 
     if (s.label) {
@@ -946,12 +1332,20 @@ function render() {
 }
 
 /* =========================================================
-   9. 读数面板
+   10. 读数面板
    ========================================================= */
+function teacherBadgeHTML() {
+  if (!teacherMode) return '';
+  return `<div class="ro-teacher">👩‍🏫 ${teacherName}老师 · 教师模式</div>`;
+}
+
 function updateReadout() {
   const r = simResult;
+  const badge = teacherBadgeHTML();
+
   if (!r.hasSource) {
     readout.innerHTML = `
+      ${badge}
       <div class="ro-title">📊 电路读数</div>
       <div class="ro-row"><span>状态</span><b class="off">无电源</b></div>
       <div class="ro-sub">放置电源并连成回路</div>`;
@@ -960,6 +1354,7 @@ function updateReadout() {
 
   if (r.shortCircuit) {
     readout.innerHTML = `
+      ${badge}
       <div class="ro-title">📊 电路读数</div>
       <div class="ro-row"><span>电路状态</span><b class="off">电源短路</b></div>
       <div class="ro-row"><span>电源电压</span><b>${r.sourceVoltage.toFixed(2)} V</b></div>
@@ -968,7 +1363,8 @@ function updateReadout() {
   }
 
   const ok = r.status === '通路';
-  let h = `<div class="ro-title">📊 电路读数</div>
+  let h = `${badge}
+    <div class="ro-title">📊 电路读数</div>
     <div class="ro-row"><span>电路状态</span><b class="${ok ? 'ok' : 'off'}">${r.status}</b></div>
     <div class="ro-row"><span>电源电压</span><b>${r.sourceVoltage.toFixed(2)} V</b></div>
     <div class="ro-row"><span>总电流</span><b>${r.totalCurrent.toFixed(3)} A</b></div>`;
@@ -1004,7 +1400,7 @@ function updateReadout() {
 }
 
 /* =========================================================
-   10. 刷新
+   11. 刷新
    ========================================================= */
 let lastShortState = false;
 let shortCooldownUntil = 0;
@@ -1027,7 +1423,7 @@ function refresh() {
 }
 
 /* =========================================================
-   11. 增删查（安全锁策略）
+   12. 增删查
    ========================================================= */
 function nextRefdes(type) {
   const prefix = PREFIX_MAP[type] || 'X';
@@ -1041,15 +1437,12 @@ function nextRefdes(type) {
   return { main: prefix, sub: String(maxN + 1) };
 }
 
-/** 添加元件：
- *  - 正常带电：允许（新元件孤立、不改变现有拓扑）
- *  - 短路：禁止（避免加重故障，需要先修复）
- */
 function addElement(type, x, y) {
   if (isShortLocked()) {
     warnLive('添加元件');
     return null;
   }
+  teacherWarnIfLive();
 
   const shape = SHAPES[type];
   const el = {
@@ -1077,11 +1470,6 @@ function addWire(aEl, aTerm, bEl, bTerm) {
   wires.push({ id: 'w' + (++uid), a: { el: aEl, term: aTerm }, b: { el: bEl, term: bTerm } });
 }
 
-/** 删除选中项：
- *  - 正常带电：只允许删除开关（断开）或电源（断电）；导线、用电器等一律禁止
- *  - 短路：允许删除导线/元件来修复电路
- *  - 不带电：全部允许
- */
 function deleteSelected() {
   if (!selected) return;
 
@@ -1093,6 +1481,7 @@ function deleteSelected() {
       warnLive('删除用电器/仪表');
       return;
     }
+    teacherWarnIfLive();
 
     elements = elements.filter(e => e.id !== selected.id);
     wires    = wires.filter(w => w.a.el !== selected.id && w.b.el !== selected.id);
@@ -1101,6 +1490,8 @@ function deleteSelected() {
       warnLive('删除导线');
       return;
     }
+    teacherWarnIfLive();
+
     wires = wires.filter(w => w.id !== selected.id);
   }
 
@@ -1114,6 +1505,8 @@ function deleteWireById(wid) {
     warnLive('删除导线');
     return false;
   }
+  teacherWarnIfLive();
+
   const before = wires.length;
   wires = wires.filter(w => w.id !== wid);
   if (wires.length === before) return false;
@@ -1129,7 +1522,10 @@ function findTerminalNear(pt, skipEl, skipTerm, maxDist = 32) {
     const terms = SHAPES[el.type].terminals;
     for (let i = 0; i < terms.length; i++) {
       if (el.id === skipEl && i === skipTerm) continue;
-      const d = Math.hypot(el.x + terms[i].x - pt.x, el.y + terms[i].y - pt.y);
+      if (!isTermVisible(el, i)) continue;
+      const T = getTerm({ el: el.id, term: i });
+      if (!T) continue;
+      const d = Math.hypot(T.pos.x - pt.x, T.pos.y - pt.y);
       if (d < bestD) { bestD = d; best = { elId: el.id, term: i }; }
     }
   }
@@ -1137,7 +1533,7 @@ function findTerminalNear(pt, skipEl, skipTerm, maxDist = 32) {
 }
 
 /* =========================================================
-   12. 属性面板
+   13. 属性面板
    ========================================================= */
 function renderProps() {
   if (!selected) {
@@ -1189,12 +1585,21 @@ function renderProps() {
             value="${el.props.voltage}" data-prop="voltage" ${canEditParam ? '' : 'disabled'}> V</label>`;
   }
   if (el.type === 'resistor') {
-    h += `<label>阻值 <input type="number" min="1" max="10000" step="1"
+    h += `<label>阻值 <input type="number" min="0" max="10000" step="1"
             value="${el.props.resistance}" data-prop="resistance" ${canEditParam ? '' : 'disabled'}> Ω</label>`;
   }
   if (el.type === 'rheostat') {
+    const max = Number(el.props.max) || 20;
+    const res = Number(el.props.resistance ?? max / 2);
     h += `<label>最大阻值 <input type="number" min="1" max="10000" step="1"
-            value="${el.props.max}" data-prop="max" ${canEditParam ? '' : 'disabled'}> Ω</label>`;
+            value="${max}" data-prop="max" ${canEditParam ? '' : 'disabled'}> Ω</label>`;
+    h += `<div class="slider-row">
+            <input type="range" min="0" max="${max}" step="0.1" value="${res}"
+              data-prop="resistance" ${canEditParam ? '' : 'disabled'}>
+          </div>`;
+    h += `<label>阻值 <input type="number" min="0" max="${max}" step="0.1"
+            value="${res.toFixed(1)}" data-prop="resistance" ${canEditParam ? '' : 'disabled'}> Ω</label>`;
+    h += `<div class="hint">拖动滑块或直接输入阻值，两者同步。左/右接线柱任选其一，另一个会整段隐藏。</div>`;
   }
   if (el.type === 'resistanceBox') {
     h += `<label>阻值 <input type="number" min="0" max="9999" step="1"
@@ -1222,12 +1627,33 @@ propsPanel.addEventListener('input', e => {
   const el = elements.find(x => x.id === selected.id);
   if (!el) return;
 
-  if (PARAM_PROPS.includes(prop) && (isLiveLocked() || isShortLocked())) {
-    return;
-  }
+  if (PARAM_PROPS.includes(prop) && (isLiveLocked() || isShortLocked())) return;
+
+  /* 开关通断是安全操作，不算带电操作 */
+  const isSwitchToggle = (prop === 'closed' && el.type === 'switch');
+  if (!isSwitchToggle) teacherWarnIfLive();
 
   if (inp.type === 'checkbox') {
     el.props[prop] = inp.checked;
+  } else if (el.type === 'rheostat' && prop === 'resistance') {
+    let v = parseFloat(inp.value);
+    if (isNaN(v)) v = 0;
+    const max = Number(el.props.max) || 20;
+    v = Math.max(0, Math.min(v, max));
+    el.props.resistance = v;
+    propsPanel.querySelectorAll(`[data-prop="resistance"]`).forEach(o => {
+      if (o !== inp) o.value = v;
+    });
+    refresh();
+    return;
+  } else if (el.type === 'rheostat' && prop === 'max') {
+    let v = parseFloat(inp.value);
+    if (isNaN(v) || v < 1) v = 1;
+    el.props.max = v;
+    if (Number(el.props.resistance) > v) el.props.resistance = v;
+    refresh();
+    renderProps();
+    return;
   } else {
     const v = parseFloat(inp.value);
     el.props[prop] = isNaN(v) ? 0 : v;
@@ -1240,12 +1666,12 @@ propsPanel.addEventListener('click', e => {
 });
 
 /* =========================================================
-   13. 元件库渲染 & 拖拽到画布
+   14. 元件库渲染 & 拖拽到画布
    ========================================================= */
 function renderPalette() {
   paletteGrid.innerHTML = Object.entries(SHAPES).map(([type, s]) => `
     <div class="pal-item" data-type="${type}">
-      <svg viewBox="-60 -42 120 84" preserveAspectRatio="xMidYMid meet">
+      <svg viewBox="-60 -50 120 100" preserveAspectRatio="xMidYMid meet">
         ${s.draw({ props: Object.assign({}, s.defaults), _lit: false })}
       </svg>
       <span>${s.name}</span>
@@ -1258,17 +1684,17 @@ paletteGrid.addEventListener('pointerdown', e => {
   if (!item) return;
   e.preventDefault();
 
-  /* 正常带电允许添加元件；只有短路时才禁止 */
   if (isShortLocked()) {
     warnLive('添加元件');
     return;
   }
+  teacherWarnIfLive();
 
   const type = item.dataset.type;
 
   const ghost = document.createElement('div');
   ghost.className = 'ghost';
-  ghost.innerHTML = `<svg viewBox="-60 -42 120 84">
+  ghost.innerHTML = `<svg viewBox="-60 -50 120 100">
     ${SHAPES[type].draw({ props: Object.assign({}, SHAPES[type].defaults), _lit: false })}
   </svg>`;
   document.body.appendChild(ghost);
@@ -1296,7 +1722,7 @@ paletteGrid.addEventListener('pointerdown', e => {
 });
 
 /* =========================================================
-   14. 画布交互
+   15. 画布交互
    ========================================================= */
 function toCanvas(e) {
   const r = canvas.getBoundingClientRect();
@@ -1316,13 +1742,13 @@ canvas.addEventListener('pointerdown', e => {
   if (e.button !== 0) return;
   const pt = toCanvas(e);
 
-  /* ① 接线柱：带电或短路时禁止接线 */
   const termEl = e.target.closest('[data-term]');
   if (termEl) {
     if (isLiveLocked() || isShortLocked()) {
       warnLive('接线');
       return;
     }
+    teacherWarnIfLive();
     dragging = {
       kind: 'wire',
       fromEl: termEl.getAttribute('data-el'),
@@ -1334,7 +1760,6 @@ canvas.addEventListener('pointerdown', e => {
     return;
   }
 
-  /* ② 导线：允许选中查看 */
   const wireEl = e.target.closest('[data-wire]');
   if (wireEl) {
     selected = { kind: 'wire', id: wireEl.getAttribute('data-wire') };
@@ -1343,12 +1768,12 @@ canvas.addEventListener('pointerdown', e => {
     return;
   }
 
-  /* ③ 元件：允许选中；正常带电允许移动；短路禁止移动 */
   const elG = e.target.closest('[data-el]');
   if (elG) {
     const id = elG.getAttribute('data-el');
     const el = elements.find(x => x.id === id);
     if (el) {
+      /* 选中：只更新 selected，不算带电操作 */
       selected = { kind: 'el', id };
       render();
       renderProps();
@@ -1357,14 +1782,13 @@ canvas.addEventListener('pointerdown', e => {
         warnLive('移动元件');
         return;
       }
-
-      dragging = { kind: 'move', id, offX: pt.x - el.x, offY: pt.y - el.y };
+      /* 不立即 teacherWarnIfLive()：等真正拖动时再警告 */
+      dragging = { kind: 'move', id, offX: pt.x - el.x, offY: pt.y - el.y, warned: false };
       canvas.setPointerCapture(e.pointerId);
     }
     return;
   }
 
-  /* ④ 空白：取消选择 */
   selected = null;
   render();
   renderProps();
@@ -1377,6 +1801,13 @@ canvas.addEventListener('pointermove', e => {
   if (dragging.kind === 'move') {
     const el = elements.find(x => x.id === dragging.id);
     if (!el) return;
+
+    /* 首次真正移动才触发带电警告（选中本身不算带电操作） */
+    if (!dragging.warned) {
+      dragging.warned = true;
+      teacherWarnIfLive();
+    }
+
     const raw = { x: pt.x - dragging.offX, y: pt.y - dragging.offY };
     const aligned = alignSnap(el, raw.x, raw.y);
     el.x = aligned.x;
@@ -1433,6 +1864,7 @@ document.getElementById('clearBtn').addEventListener('click', () => {
     warnLive('清空画布');
     return;
   }
+  teacherWarnIfLive();
 
   elements = []; wires = []; selected = null;
   refresh();
@@ -1440,8 +1872,9 @@ document.getElementById('clearBtn').addEventListener('click', () => {
 });
 
 /* =========================================================
-   15. 启动
+   16. 启动
    ========================================================= */
+updateTeacherBtn();
 renderPalette();
 refresh();
 renderProps();
