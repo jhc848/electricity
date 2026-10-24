@@ -143,6 +143,15 @@
   }
   .props input[type=range]:disabled { opacity: .5; cursor: not-allowed; }
   .props .slider-row { display: flex; align-items: center; gap: 8px; padding: 0 2px; }
+  .props .rotate-btn {
+    margin-top: 4px; padding: 6px; border: 1px solid #bfdbfe; background: #eff6ff;
+    color: #1d4ed8; border-radius: 9px; font-size: .76rem; cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+  .props .rotate-btn:hover { background: #dbeafe; }
+  .props .rotate-btn:disabled {
+    background: #f8fafc; color: #cbd5e1; border-color: #e2e8f0; cursor: not-allowed;
+  }
   .props .del-btn {
     margin-top: 2px; padding: 6px; border: 1px solid #fecaca; background: #fff5f5;
     color: #dc2626; border-radius: 9px; font-size: .76rem; cursor: pointer; font-family: inherit;
@@ -866,13 +875,23 @@ function teacherWarnIfLive() {
 }
 
 /* =========================================================
-   6. 几何 / 布线 / 接线柱可见性
+   6. 旋转工具
    ========================================================= */
-function getTermPos(el, termIndex) {
-  const shape = SHAPES[el.type];
-  const t = shape.terminals[termIndex];
-  if (!t) return null;
+/** 二维点按角度旋转（度） */
+function rotPt(p, deg) {
+  if (!deg) return { x: p.x, y: p.y };
+  const rad = deg * Math.PI / 180;
+  const c = Math.cos(rad), s = Math.sin(rad);
+  return {
+    x: Math.round(p.x * c - p.y * s),
+    y: Math.round(p.x * s + p.y * c)
+  };
+}
 
+/** 元件本地坐标（未旋转） */
+function getTermLocalPos(el, termIndex) {
+  const t = SHAPES[el.type].terminals[termIndex];
+  if (!t) return null;
   if (el.type === 'rheostat' && termIndex === 2) {
     const ratio = rheoRatio(el);
     return { x: -20 + ratio * 40, y: -38 };
@@ -880,16 +899,29 @@ function getTermPos(el, termIndex) {
   return { x: t.x, y: t.y };
 }
 
+/** 元件全局坐标（含旋转），带 dir 方向 */
+function getTermGlobal(el, termIndex) {
+  const local = getTermLocalPos(el, termIndex);
+  if (!local) return null;
+  const t = SHAPES[el.type].terminals[termIndex];
+  const rot = el.rotation || 0;
+  const pos = rotPt(local, rot);
+  const dirRaw = rotPt({ x: t.dx, y: t.dy }, rot);
+  /* 方向归一化（只保留 ±1 或 0） */
+  const dir = {
+    x: Math.abs(dirRaw.x) > 0.5 ? Math.sign(dirRaw.x) : 0,
+    y: Math.abs(dirRaw.y) > 0.5 ? Math.sign(dirRaw.y) : 0
+  };
+  return {
+    pos: { x: el.x + pos.x, y: el.y + pos.y },
+    dir
+  };
+}
+
 function getTerm(ref) {
   const el = elements.find(e => e.id === ref.el);
   if (!el) return null;
-  const t = SHAPES[el.type].terminals[ref.term];
-  if (!t) return null;
-  const pos = getTermPos(el, ref.term);
-  return {
-    pos: { x: el.x + pos.x, y: el.y + pos.y },
-    dir: { x: t.dx, y: t.dy }
-  };
+  return getTermGlobal(el, ref.term);
 }
 
 function isTermVisible(el, termIndex) {
@@ -900,6 +932,9 @@ function isTermVisible(el, termIndex) {
   return true;
 }
 
+/* =========================================================
+   7. 布线
+   ========================================================= */
 function dedupe(pts) {
   const out = [];
   for (const p of pts) {
@@ -1006,7 +1041,7 @@ function tempPath(A, mouse) {
 }
 
 /* =========================================================
-   7. 线性方程组求解
+   8. 线性方程组求解
    ========================================================= */
 function solveLinear(A, z) {
   const n = z.length;
@@ -1042,7 +1077,7 @@ function solveLinear(A, z) {
 }
 
 /* =========================================================
-   8. 电路仿真
+   9. 电路仿真
    ========================================================= */
 const LAMP_R      = 10;
 const BELL_R      = 10;
@@ -1220,8 +1255,7 @@ function simulate() {
   res.status = sourceCurrent > 1e-3 ? '通路' : '断路';
   res.live = live || sourceCurrent > 1e-3;
 
-  /* ---------- 无有效负载判定短路 ---------- */
-  /* 有效负载：灯泡、电铃、电动机、阻值>0的定值电阻/电阻箱/滑动变阻器 */
+  /* 无有效负载判定短路 */
   let hasEffectiveLoad = false;
   for (const r of resistors) {
     if (!r.el) continue;
@@ -1231,7 +1265,6 @@ function simulate() {
     if (t === 'resistanceBox' && Number(r.el.props.resistance) > 0) { hasEffectiveLoad = true; break; }
   }
   if (!hasEffectiveLoad) {
-    /* 滑动变阻器：只要有一处接入电路且阻值>0，视为有效负载 */
     for (const el of elements) {
       if (el.type !== 'rheostat') continue;
       const rawR = Number(el.props.resistance);
@@ -1256,11 +1289,12 @@ function simulate() {
 }
 
 /* =========================================================
-   9. 渲染
+   10. 渲染
    ========================================================= */
 function refdesSVG(el) {
   if (!el.refdes) return '';
-  const pos = SHAPES[el.type].refPos || { x: 0, y: -30 };
+  const basePos = SHAPES[el.type].refPos || { x: 0, y: -30 };
+  const pos = rotPt(basePos, el.rotation || 0);
   const mainSize = 15;
   const subSize  = 10;
   const dy       = 5;
@@ -1300,25 +1334,32 @@ function render() {
   for (const el of elements) {
     const s = SHAPES[el.type];
     const sel = selected && selected.kind === 'el' && selected.id === el.id;
+    const rot = el.rotation || 0;
     out += `<g class="element${sel ? ' selected' : ''}" data-el="${el.id}" transform="translate(${el.x} ${el.y})">`;
-    out += s.draw(el);
+    /* 符号旋转 */
+    out += `<g transform="rotate(${rot})">${s.draw(el)}</g>`;
+    /* 参考符号：位置旋转，文字不旋转 */
     out += refdesSVG(el);
 
+    /* 接线柱：位置旋转后的本地坐标 */
     s.terminals.forEach((t, i) => {
       if (!isTermVisible(el, i)) return;
-      const tp = getTermPos(el, i);
-      if (!tp) return;
-      out += `<circle class="hit" cx="${tp.x}" cy="${tp.y}" r="13" data-el="${el.id}" data-term="${i}"/>`;
-      out += `<circle class="dot-t" cx="${tp.x}" cy="${tp.y}" r="4"/>`;
+      const local = getTermLocalPos(el, i);
+      if (!local) return;
+      const pos = rotPt(local, rot);
+      out += `<circle class="hit" cx="${pos.x}" cy="${pos.y}" r="13" data-el="${el.id}" data-term="${i}"/>`;
+      out += `<circle class="dot-t" cx="${pos.x}" cy="${pos.y}" r="4"/>`;
     });
 
+    /* 数值标签：位置固定在下方（不旋转） */
     if (s.label) {
       const txt = s.label(el);
-      if (txt) out += `<text class="el-label" x="0" y="38">${txt}</text>`;
+      if (txt) out += `<text class="el-label" x="0" y="40">${txt}</text>`;
     }
 
+    /* 仪表读数：固定在下方 */
     const ro = meterReadout(el);
-    if (ro) out += `<text class="el-readout" x="0" y="42">${ro}</text>`;
+    if (ro) out += `<text class="el-readout" x="0" y="44">${ro}</text>`;
 
     out += `</g>`;
   }
@@ -1332,7 +1373,7 @@ function render() {
 }
 
 /* =========================================================
-   10. 读数面板
+   11. 读数面板
    ========================================================= */
 function teacherBadgeHTML() {
   if (!teacherMode) return '';
@@ -1400,7 +1441,7 @@ function updateReadout() {
 }
 
 /* =========================================================
-   11. 刷新
+   12. 刷新
    ========================================================= */
 let lastShortState = false;
 let shortCooldownUntil = 0;
@@ -1423,7 +1464,7 @@ function refresh() {
 }
 
 /* =========================================================
-   12. 增删查
+   13. 增删查
    ========================================================= */
 function nextRefdes(type) {
   const prefix = PREFIX_MAP[type] || 'X';
@@ -1450,6 +1491,7 @@ function addElement(type, x, y) {
     type,
     x: snap(x),
     y: snap(y),
+    rotation: 0,
     props: Object.assign({}, shape.defaults),
     refdes: nextRefdes(type)
   };
@@ -1516,6 +1558,21 @@ function deleteWireById(wid) {
   return true;
 }
 
+/** 旋转选中的元件 90°（改变接线柱方向，按带电操作处理） */
+function rotateSelected() {
+  if (!selected || selected.kind !== 'el') return;
+  const el = elements.find(e => e.id === selected.id);
+  if (!el) return;
+
+  if (isLiveLocked()) { warnLive('旋转元件'); return; }
+  if (isShortLocked()) { warnLive('旋转元件'); return; }
+  teacherWarnIfLive();
+
+  el.rotation = ((el.rotation || 0) + 90) % 360;
+  refresh();
+  renderProps();
+}
+
 function findTerminalNear(pt, skipEl, skipTerm, maxDist = 32) {
   let best = null, bestD = maxDist;
   for (const el of elements) {
@@ -1523,7 +1580,7 @@ function findTerminalNear(pt, skipEl, skipTerm, maxDist = 32) {
     for (let i = 0; i < terms.length; i++) {
       if (el.id === skipEl && i === skipTerm) continue;
       if (!isTermVisible(el, i)) continue;
-      const T = getTerm({ el: el.id, term: i });
+      const T = getTermGlobal(el, i);
       if (!T) continue;
       const d = Math.hypot(T.pos.x - pt.x, T.pos.y - pt.y);
       if (d < bestD) { bestD = d; best = { elId: el.id, term: i }; }
@@ -1533,7 +1590,7 @@ function findTerminalNear(pt, skipEl, skipTerm, maxDist = 32) {
 }
 
 /* =========================================================
-   13. 属性面板
+   14. 属性面板
    ========================================================= */
 function renderProps() {
   if (!selected) {
@@ -1566,6 +1623,7 @@ function renderProps() {
 
   const canDelete = shortLock || !liveLock || isSwitch || isBattery;
   const canEditParam = !liveLock && !shortLock;
+  const canRotate = !liveLock && !shortLock;
 
   let h = `<div class="props-title">${s.name} <span style="color:#7d8db0;font-size:.72rem">${refName}</span></div>`;
 
@@ -1609,6 +1667,10 @@ function renderProps() {
     h += `<label><input type="checkbox" ${el.props.closed ? 'checked' : ''}
             data-prop="closed"> 开关闭合（${refName}）</label>`;
   }
+
+  h += `<button class="rotate-btn" id="rotateBtn" ${canRotate ? '' : 'disabled'}>
+          ↻ 旋转 90°（当前 ${el.rotation || 0}°）
+        </button>`;
 
   let delLabel = '删除元件（含相连导线）';
   if (liveLock && isBattery) delLabel = '移除电源（断电）';
@@ -1662,11 +1724,12 @@ propsPanel.addEventListener('input', e => {
 });
 
 propsPanel.addEventListener('click', e => {
+  if (e.target.id === 'rotateBtn' && !e.target.disabled) rotateSelected();
   if (e.target.id === 'delBtn' && !e.target.disabled) deleteSelected();
 });
 
 /* =========================================================
-   14. 元件库渲染 & 拖拽到画布
+   15. 元件库渲染 & 拖拽到画布
    ========================================================= */
 function renderPalette() {
   paletteGrid.innerHTML = Object.entries(SHAPES).map(([type, s]) => `
@@ -1722,7 +1785,7 @@ paletteGrid.addEventListener('pointerdown', e => {
 });
 
 /* =========================================================
-   15. 画布交互
+   16. 画布交互
    ========================================================= */
 function toCanvas(e) {
   const r = canvas.getBoundingClientRect();
@@ -1773,7 +1836,6 @@ canvas.addEventListener('pointerdown', e => {
     const id = elG.getAttribute('data-el');
     const el = elements.find(x => x.id === id);
     if (el) {
-      /* 选中：只更新 selected，不算带电操作 */
       selected = { kind: 'el', id };
       render();
       renderProps();
@@ -1782,7 +1844,6 @@ canvas.addEventListener('pointerdown', e => {
         warnLive('移动元件');
         return;
       }
-      /* 不立即 teacherWarnIfLive()：等真正拖动时再警告 */
       dragging = { kind: 'move', id, offX: pt.x - el.x, offY: pt.y - el.y, warned: false };
       canvas.setPointerCapture(e.pointerId);
     }
@@ -1802,7 +1863,6 @@ canvas.addEventListener('pointermove', e => {
     const el = elements.find(x => x.id === dragging.id);
     if (!el) return;
 
-    /* 首次真正移动才触发带电警告（选中本身不算带电操作） */
     if (!dragging.warned) {
       dragging.warned = true;
       teacherWarnIfLive();
@@ -1852,9 +1912,19 @@ canvas.addEventListener('dblclick', e => {
 });
 
 window.addEventListener('keydown', e => {
-  if (e.key !== 'Delete' && e.key !== 'Backspace') return;
   if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
-  if (selected) { e.preventDefault(); deleteSelected(); }
+
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (selected) { e.preventDefault(); deleteSelected(); }
+    return;
+  }
+
+  if (e.key === 'r' || e.key === 'R') {
+    if (selected && selected.kind === 'el') {
+      e.preventDefault();
+      rotateSelected();
+    }
+  }
 });
 
 document.getElementById('clearBtn').addEventListener('click', () => {
@@ -1872,7 +1942,7 @@ document.getElementById('clearBtn').addEventListener('click', () => {
 });
 
 /* =========================================================
-   16. 启动
+   17. 启动
    ========================================================= */
 updateTeacherBtn();
 renderPalette();
